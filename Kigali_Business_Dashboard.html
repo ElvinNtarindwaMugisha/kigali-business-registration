@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kigali Business Registration Analysis | Data Analytics Project</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700&family=DM+Sans:wght@300;400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --blue:    #185FA5;
+    --dkblue:  #0C447C;
+    --ltblue:  #E6F1FB;
+    --green:   #1D9E75;
+    --dkgreen: #0F6E56;
+    --ltgreen: #E1F5EE;
+    --amber:   #EF9F27;
+    --ltamber: #FAEEDA;
+    --purple:  #7F77DD;
+    --ltpurple:#EEEDFE;
+    --red:     #E24B4A;
+    --gray:    #5F5E5A;
+    --muted:   #888780;
+    --border:  #D3D1C7;
+    --ltgray:  #F1EFE8;
+    --bg:      #FAFAF8;
+    --card:    #FFFFFF;
+    --text:    #2C2C2A;
+  }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); padding-bottom:60px; }
+
+  .header { background:var(--dkblue); padding:36px 48px 32px; position:relative; overflow:hidden; }
+  .header::after  { content:''; position:absolute; right:-80px; top:-80px; width:300px; height:300px; border-radius:50%; background:rgba(255,255,255,0.04); }
+  .header::before { content:''; position:absolute; right:60px; bottom:-40px; width:160px; height:160px; border-radius:50%; background:rgba(255,255,255,0.03); }
+  .header-tag { font-family:'Syne',sans-serif; font-size:11px; font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.55); margin-bottom:10px; }
+  .header h1  { font-family:'Syne',sans-serif; font-size:32px; font-weight:700; color:#fff; line-height:1.15; max-width:620px; }
+  .header-meta { margin-top:10px; font-size:13px; color:rgba(255,255,255,.6); }
+  .header-meta span { margin-right:20px; }
+
+  .container { max-width:1100px; margin:0 auto; padding:0 32px; }
+
+  .kpi-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin:32px 0 28px; }
+  .kpi { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px 20px 18px; position:relative; overflow:hidden; }
+  .kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--blue); }
+  .kpi.green::before  { background:var(--green); }
+  .kpi.amber::before  { background:var(--amber); }
+  .kpi.purple::before { background:var(--purple); }
+  .kpi-val   { font-family:'Syne',sans-serif; font-size:30px; font-weight:700; color:var(--text); line-height:1; margin-bottom:6px; }
+  .kpi-label { font-size:12px; color:var(--muted); line-height:1.4; }
+  .kpi-badge { display:inline-block; margin-top:8px; font-size:11px; font-weight:500; color:var(--dkblue); background:var(--ltblue); padding:2px 8px; border-radius:20px; }
+  .kpi.green .kpi-badge  { color:var(--dkgreen); background:var(--ltgreen); }
+  .kpi.amber .kpi-badge  { color:#854F0B; background:var(--ltamber); }
+  .kpi.purple .kpi-badge { color:#3C3489; background:var(--ltpurple); }
+
+  .section-head { display:flex; align-items:baseline; gap:12px; margin:32px 0 14px; }
+  .section-head h2 { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--text); }
+  .section-head p { font-size:12px; color:var(--muted); }
+
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:24px; margin-bottom:20px; }
+  .card-title { font-size:13px; font-weight:500; color:var(--text); margin-bottom:4px; }
+  .card-sub   { font-size:11px; color:var(--muted); margin-bottom:16px; }
+
+  .two-col   { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
+  .three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:20px; }
+
+  .legend { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:14px; font-size:11px; color:var(--muted); }
+  .legend span { display:flex; align-items:center; gap:5px; }
+  .dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+
+  .insight-box { border-left:3px solid var(--blue); padding:12px 16px; background:var(--ltblue); border-radius:0 8px 8px 0; font-size:13px; line-height:1.6; color:var(--text); margin-bottom:12px; }
+  .insight-box strong { color:var(--dkblue); }
+  .insight-box.green  { border-color:var(--green);  background:var(--ltgreen);  }
+  .insight-box.green strong  { color:var(--dkgreen); }
+  .insight-box.amber  { border-color:var(--amber);  background:var(--ltamber);  }
+  .insight-box.amber strong  { color:#854F0B; }
+  .insight-box.purple { border-color:var(--purple); background:var(--ltpurple); }
+  .insight-box.purple strong { color:#3C3489; }
+
+  .data-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .data-table thead th { background:var(--ltgray); padding:9px 12px; text-align:left; font-weight:500; font-size:11px; letter-spacing:.03em; color:var(--muted); border-bottom:1px solid var(--border); }
+  .data-table tbody td { padding:8px 12px; border-bottom:1px solid var(--ltgray); color:var(--text); }
+  .data-table tbody tr:last-child td { border-bottom:none; }
+  .data-table tbody tr:hover td { background:var(--ltgray); }
+  .up   { color:var(--green); font-weight:500; }
+  .down { color:var(--red);   font-weight:500; }
+  .big  { color:var(--dkblue); font-weight:700; }
+
+  .tab-row { display:flex; gap:8px; margin-bottom:16px; }
+  .tab { font-size:12px; padding:5px 14px; border-radius:20px; border:1px solid var(--border); cursor:pointer; background:transparent; color:var(--muted); transition:all .15s; font-family:'DM Sans',sans-serif; }
+  .tab.active { background:var(--ltblue); color:var(--dkblue); border-color:var(--blue); font-weight:500; }
+  .tab:hover:not(.active) { background:var(--ltgray); }
+
+  .district-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:4px; }
+  .dist-card { border:1px solid var(--border); border-radius:10px; padding:16px; background:var(--card); }
+  .dist-card.gasabo    { border-top:3px solid var(--blue); }
+  .dist-card.nyarugenge{ border-top:3px solid var(--purple); }
+  .dist-card.kicukiro  { border-top:3px solid var(--green); }
+  .dist-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; margin-bottom:10px; }
+  .dist-stat { display:flex; justify-content:space-between; font-size:12px; padding:4px 0; border-bottom:1px solid var(--ltgray); }
+  .dist-stat:last-child { border:none; }
+  .dist-stat span:last-child { font-weight:500; color:var(--text); }
+
+  .footer { margin-top:40px; padding-top:20px; border-top:1px solid var(--border); font-size:11px; color:var(--muted); line-height:1.7; }
+  .footer strong { color:var(--text); }
+
+  .chart-wrap { position:relative; width:100%; }
+
+  @media(max-width:700px){
+    .kpi-strip{grid-template-columns:1fr 1fr;}
+    .two-col,.three-col{grid-template-columns:1fr;}
+    .district-grid{grid-template-columns:1fr;}
+    .header{padding:28px 20px;}
+    .header h1{font-size:22px;}
+    .container{padding:0 16px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <p class="header-tag">Data Analytics Project &nbsp;·&nbsp; Kigali Business Registration</p>
+  <h1>Kigali Business<br>Registration Analysis</h1>
+  <p class="header-meta">
+    <span>2015 – 2024</span>
+    <span>NISR · World Bank · RDB</span>
+    <span>April 2026</span>
+  </p>
+</div>
+
+<div class="container">
+
+  <div class="kpi-strip">
+    <div class="kpi">
+      <div class="kpi-val">65.8%</div>
+      <div class="kpi-label">Kigali share of formal businesses (2023)</div>
+      <div class="kpi-badge">NISR IBES 2023</div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi-val">+88%</div>
+      <div class="kpi-label">Registration growth 2015–2024</div>
+      <div class="kpi-badge">13,180 → 24,800</div>
+    </div>
+    <div class="kpi amber">
+      <div class="kpi-val">87%</div>
+      <div class="kpi-label">Business informality rate (2024)</div>
+      <div class="kpi-badge">Structural challenge</div>
+    </div>
+    <div class="kpi purple">
+      <div class="kpi-val">269K</div>
+      <div class="kpi-label">Total establishments nationally (2023)</div>
+      <div class="kpi-badge">Establishment Census</div>
+    </div>
+  </div>
+
+  <!-- REGISTRATION TREND -->
+  <div class="card">
+    <div class="card-title">New business registrations — national trend with Kigali estimate</div>
+    <div class="card-sub">Limited liability corporations registered per year · Source: World Bank IC.BUS.NREG; RDB Annual Reports</div>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--blue);opacity:.75"></span>National total (bars)</span>
+      <span><span class="dot" style="background:var(--amber);border-radius:50%"></span>Kigali estimate ~68% (line)</span>
+    </div>
+    <div class="chart-wrap" style="height:280px">
+      <canvas id="regChart" role="img" aria-label="Bar and line chart showing Rwanda business registrations growing from 13,180 in 2015 to 24,800 in 2024">National registrations rose from 13,180 (2015) to 24,800 (2024) with one dip in 2016.</canvas>
+    </div>
+  </div>
+
+  <div class="two-col">
+
+    <!-- SECTOR BREAKDOWN -->
+    <div class="card">
+      <div class="card-title">Establishments by sector (2023)</div>
+      <div class="card-sub">NISR IBES 2023 — % share of all establishments</div>
+      <div class="chart-wrap" style="height:250px">
+        <canvas id="sectorChart" role="img" aria-label="Horizontal bar chart showing wholesale retail at 54.6%, accommodation 23%, manufacturing 6.2%">Wholesale and retail dominates at 54.6%, followed by accommodation at 23.0%.</canvas>
+      </div>
+    </div>
+
+    <!-- FORMALITY TREND -->
+    <div class="card">
+      <div class="card-title">Business formality rate trend</div>
+      <div class="card-sub">% of all businesses that are formally registered · NISR IBES series</div>
+      <div class="chart-wrap" style="height:250px">
+        <canvas id="formalChart" role="img" aria-label="Line chart showing Rwanda business formality rate declining from 8.9% in 2017 to around 6.8% in 2024">Formality peaked at 8.9% in 2017 and settled around 6–7% range by 2024.</canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FORMAL VS INFORMAL BY SIZE -->
+  <div class="card">
+    <div class="card-title">Formal vs informal by business size (2023)</div>
+    <div class="card-sub">% distribution within each size class — micro enterprises are overwhelmingly informal</div>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--green)"></span>Formal</span>
+      <span><span class="dot" style="background:var(--red)"></span>Informal</span>
+    </div>
+    <div class="chart-wrap" style="height:200px">
+      <canvas id="sizeChart" role="img" aria-label="Grouped bar chart showing formal vs informal breakdown across micro, small, medium and large businesses">Micro businesses are 93.7% informal while large businesses are mostly formal.</canvas>
+    </div>
+  </div>
+
+  <!-- DISTRICT BREAKDOWN -->
+  <div class="section-head">
+    <h2>Kigali District Deep Dive</h2>
+    <p>Establishment Census 2023 · NISR</p>
+  </div>
+  <div class="district-grid">
+    <div class="dist-card gasabo">
+      <div class="dist-name" style="color:var(--blue)">Gasabo</div>
+      <div class="dist-stat"><span>Est. share (national)</span><span>9.3%</span></div>
+      <div class="dist-stat"><span>Pop. share (Kigali)</span><span>50.4%</span></div>
+      <div class="dist-stat"><span>Density index</span><span>0.18</span></div>
+      <div class="dist-stat"><span>Character</span><span>Commercial hub</span></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.5">Largest district by population. Hosts major commercial zones including Kimironko market and CBD extension areas.</div>
+    </div>
+    <div class="dist-card nyarugenge">
+      <div class="dist-name" style="color:var(--purple)">Nyarugenge</div>
+      <div class="dist-stat"><span>Est. share (national)</span><span>8.4%</span></div>
+      <div class="dist-stat"><span>Pop. share (Kigali)</span><span>26.1%</span></div>
+      <div class="dist-stat"><span>Density index</span><span>0.32</span></div>
+      <div class="dist-stat"><span>Character</span><span>Most dense (CBD)</span></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.5">Highest commercial density relative to population. Houses the Kigali central business district and the majority of formal financial services.</div>
+    </div>
+    <div class="dist-card kicukiro">
+      <div class="dist-name" style="color:var(--green)">Kicukiro</div>
+      <div class="dist-stat"><span>Est. share (national)</span><span>6.3%</span></div>
+      <div class="dist-stat"><span>Pop. share (Kigali)</span><span>23.5%</span></div>
+      <div class="dist-stat"><span>Density index</span><span>0.27</span></div>
+      <div class="dist-stat"><span>Character</span><span>Industrial growth</span></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.5">Fast-growing district with mix of residential and light industrial activity. Kicukiro SEZ and Gikondo industrial park drive manufacturing registrations.</div>
+    </div>
+  </div>
+
+  <!-- KEY INSIGHTS -->
+  <div class="section-head">
+    <h2>Key Findings</h2>
+    <p>What the data tells us</p>
+  </div>
+
+  <div class="insight-box">
+    <strong>Registrations grew 88% in 9 years (2015–2024)</strong> — from 13,180 to 24,800 nationally, with the only dip in 2016 (−15%). Post-2017 growth has been consistent, and 2024 posted the strongest year at +15.3%, driven by Rwanda's top-10 global B-READY ranking.
+  </div>
+  <div class="insight-box green">
+    <strong>Wholesale & retail is dominant but hospitality is rising fast</strong> — at 54.6% of all establishments, retail remains king. But accommodation & food services at 23% reflects Kigali's emergence as a regional MICE hub, generating USD 84.8M in 2024 alone.
+  </div>
+  <div class="insight-box amber">
+    <strong>87% informality means official data undercounts the real economy</strong> — only ~1 in 8 businesses are formally registered. Micro enterprises (83.9% of all businesses) operate 93.7% informally, meaning Rwanda's true business formation rate is far higher than registration figures show.
+  </div>
+  <div class="insight-box purple">
+    <strong>Nyarugenge has the highest commercial density in Kigali</strong> — its density index of 0.32 (establishment share ÷ population share) makes it more commercially concentrated than Gasabo or Kicukiro, anchored by the CBD and formal financial services sector.
+  </div>
+
+  <!-- FULL DATA TABLE -->
+  <div class="section-head">
+    <h2>Full Registration Data Table</h2>
+    <p>2015–2024 · World Bank / RDB</p>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th>National Registrations</th>
+          <th>YoY Change</th>
+          <th>Kigali Estimate (~68%)</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody id="regTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <strong>Data Sources:</strong>
+    NISR Integrated Business Enterprise Survey (IBES) 2022 & 2023 &nbsp;·&nbsp;
+    NISR Establishment Census 2023 &nbsp;·&nbsp;
+    World Bank Entrepreneurship Survey (IC.BUS.NREG) &nbsp;·&nbsp;
+    Rwanda Development Board Annual Reports 2022 & 2024 &nbsp;·&nbsp;
+    NISR / World Bank Rwanda IBES 2019–2021 Report<br><br>
+    Analysis and dashboard by Fabrice &nbsp;·&nbsp; April 2026
+  </div>
+
+</div>
+
+<script>
+const years  = [2015,2016,2017,2018,2019,2020,2021,2022,2023,2024];
+const total  = [13180,11200,12400,13800,14900,16105,17800,19200,21500,24800];
+const kigali = total.map(v => Math.round(v * 0.68));
+const notes  = [
+  "World Bank baseline","−15% dip","Recovery","Steady growth","Pre-COVID peak",
+  "COVID year — still grew","Post-COVID boom","Continued growth","Strong momentum",
+  "Highest YoY — B-READY #1 Africa"
+];
+
+const B="#185FA5", G="#1D9E75", AM="#EF9F27", R="#E24B4A",
+      PU="#7F77DD", GR="#888780", gridC="rgba(0,0,0,0.06)", txtC="#888780";
+
+const base = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{ display:false } },
+  scales:{
+    x:{ ticks:{color:txtC,font:{size:10,family:"DM Sans"},autoSkip:false,maxRotation:45}, grid:{color:gridC} },
+    y:{ ticks:{color:txtC,font:{size:10,family:"DM Sans"}}, grid:{color:gridC} }
+  }
+};
+
+// ── Registration trend
+new Chart(document.getElementById("regChart"),{
+  type:"bar",
+  data:{
+    labels:years,
+    datasets:[
+      { label:"National total", data:total,
+        backgroundColor:"rgba(24,95,165,0.7)", borderRadius:3, order:2 },
+      { label:"Kigali estimate", data:kigali,
+        type:"line", borderColor:AM, backgroundColor:"transparent",
+        borderWidth:2.5, pointRadius:5, pointBackgroundColor:AM, order:1 }
+    ]
+  },
+  options:{
+    ...base,
+    plugins:{
+      ...base.plugins,
+      tooltip:{ callbacks:{
+        afterBody: ctx => ctx[0] ? [` Note: ${notes[ctx[0].dataIndex]}`] : []
+      }}
+    },
+    scales:{
+      ...base.scales,
+      y:{...base.scales.y, ticks:{...base.scales.y.ticks,
+         callback:v => v.toLocaleString()}}
+    }
+  }
+});
+
+// ── Sector chart
+const sectors = ["Wholesale & retail","Accommodation & food","Manufacturing","Professional services","Transport","Construction","Other"];
+const secVals = [54.6,23.0,6.2,5.8,4.4,3.2,2.8];
+const secColors = [B,G,AM,PU,R,"#B4B2A9","#5DCAA5"];
+new Chart(document.getElementById("sectorChart"),{
+  type:"bar",
+  data:{ labels:sectors, datasets:[{ data:secVals, backgroundColor:secColors, borderRadius:3 }] },
+  options:{
+    ...base,
+    indexAxis:"y",
+    scales:{
+      x:{...base.scales.x, max:65, ticks:{...base.scales.x.ticks, callback:v=>v+"%"}},
+      y:{...base.scales.y, ticks:{...base.scales.y.ticks, autoSkip:false, maxRotation:0, font:{size:10.5}}}
+    }
+  }
+});
+
+// ── Formality
+const fYears = [2017,2018,2019,2020,2021,2022,2023,2024];
+const fRates = [8.9,7.2,6.1,5.8,5.5,5.9,6.3,6.8];
+new Chart(document.getElementById("formalChart"),{
+  type:"line",
+  data:{
+    labels:fYears,
+    datasets:[{ data:fRates, borderColor:AM, backgroundColor:"rgba(239,159,39,0.1)",
+      borderWidth:2.5, pointRadius:5, pointBackgroundColor:AM, fill:true, tension:0.35 }]
+  },
+  options:{
+    ...base,
+    scales:{
+      ...base.scales,
+      y:{...base.scales.y, min:4, max:11,
+         ticks:{...base.scales.y.ticks, callback:v=>v+"%"}}
+    }
+  }
+});
+
+// ── Size formal vs informal
+const sizeLabels = ["Micro (1–3)","Small (4–30)","Medium (31–100)","Large (100+)"];
+const formal   = [12.5, 46.6, 28.4, 12.5];
+const informal = [93.7,  5.1,  0.9,  0.3];
+new Chart(document.getElementById("sizeChart"),{
+  type:"bar",
+  data:{
+    labels:sizeLabels,
+    datasets:[
+      { label:"Formal (%)",   data:formal,   backgroundColor:"rgba(29,158,117,.8)", borderRadius:3 },
+      { label:"Informal (%)", data:informal, backgroundColor:"rgba(226,75,74,.75)",  borderRadius:3 }
+    ]
+  },
+  options:{
+    ...base,
+    scales:{
+      ...base.scales,
+      y:{...base.scales.y, max:105,
+         ticks:{...base.scales.y.ticks, callback:v=>v+"%"}}
+    }
+  }
+});
+
+// ── Data Table
+const tbody = document.getElementById("regTableBody");
+years.forEach((yr,i) => {
+  const prev = i>0 ? total[i-1] : null;
+  const diff = prev ? ((total[i]-prev)/prev*100).toFixed(1) : null;
+  const cls  = !diff ? "" : parseFloat(diff)<0 ? "down" : parseFloat(diff)>=12 ? "big up" : "up";
+  const sign = diff && parseFloat(diff)>0 ? "+" : "";
+  tbody.innerHTML += `<tr>
+    <td><strong>${yr}</strong></td>
+    <td>${total[i].toLocaleString()}</td>
+    <td class="${cls}">${diff ? sign+diff+"%" : "—"}</td>
+    <td>${kigali[i].toLocaleString()}</td>
+    <td style="color:#888780;font-size:11px">${notes[i]}</td>
+  </tr>`;
+});
+</script>
+</body>
+</html>
